@@ -14,3 +14,5 @@ doc/html
 doc/latex
 trunk
 .DS_Store
+mininet_wifi.egg-info/
+.vscode/
