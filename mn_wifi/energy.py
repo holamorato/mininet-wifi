@@ -5,6 +5,7 @@
 import re
 
 from threading import Thread as thread
+from datetime import datetime
 from time import sleep, time
 
 from mininet.log import error
@@ -55,7 +56,7 @@ class BitZigBeeEnergy(object):
                 for node in nodes:
                     for intf in node.wintfs.values():
                         # Calculate energy based on bytes transferred
-                        energy_consumed = self.get_bytes_consumption(intf)
+                        energy_consumed = self.get_bytes_consumption(node, intf)
                         intf.consumption += energy_consumed
                         node.consumption += energy_consumed
         except Exception as e:
@@ -87,7 +88,7 @@ class BitZigBeeEnergy(object):
         """
         return self.get_cat_dev(intf, 10)  # Column 10: TX bytes
 
-    def get_bytes_consumption(self, intf):
+    def get_bytes_consumption(self, node, intf):
         """
         Calculates the energy consumption based on bytes transmitted and received.
         Args:
@@ -112,6 +113,12 @@ class BitZigBeeEnergy(object):
 
         # Convert Joules to Watt-hours
         energy_in_wh = energy_in_joules * self.joules_to_wh
+
+        # Produce log
+        current_datetime = datetime.now()
+        formatted_datetime = current_datetime.strftime("%Y-%m-%d %H:%M:%S")
+        node.pexec('echo {},{},{},{} >> /tmp/net-consumption.log'.format(formatted_datetime, tx_diff, rx_diff, energy_in_wh), shell=True)
+
         return energy_in_wh
 
     def shutdown_intfs(self, node):
